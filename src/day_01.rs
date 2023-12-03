@@ -13,7 +13,7 @@ fn generator_day01_part1(inp: &str) -> Vec<Vec<CalibrationNumber>> {
     cleared_lines
 }
 
-const REPLACE: [(&'static str, u32); 18] = [
+const REPLACE: [(&str, u32); 18] = [
     ("one", 1),
     ("1", 1),
     ("two", 2),
