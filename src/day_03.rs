@@ -1,21 +1,24 @@
-use std::ops::Add;
+use std::collections::HashSet;
 
 use aoc_runner_derive::{aoc, aoc_generator};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Number {
     num: u32,
-    neighbours: Vec<char>,
+    neighbours: Vec<(char, usize, usize)>,
 }
 
-fn get_neighbours(lines: &Vec<&str>, col: usize, row: usize) -> Vec<char> {
+fn get_neighbours(lines: &Vec<&str>, col: usize, row: usize) -> Vec<(char, usize, usize)> {
     let mut neighbours = vec![];
+
+    let lower_bound = row.max(1) - 1;
 
     lines
         .iter()
         .take((row + 2).min(lines.len()))
-        .skip(row.max(1) - 1)
-        .for_each(|line| {
+        .skip(lower_bound)
+        .enumerate()
+        .for_each(|(y, line)| {
             if col >= line.len() {
                 return;
             }
@@ -27,13 +30,13 @@ fn get_neighbours(lines: &Vec<&str>, col: usize, row: usize) -> Vec<char> {
                 return;
             }
 
-            neighbours.push(c)
+            neighbours.push((c, col, lower_bound + y))
         });
 
     neighbours
 }
 
-#[aoc_generator(day03, part1)]
+#[aoc_generator(day03)]
 fn generator_day03_part1(inp: &str) -> Vec<Number> {
     let mut numbers = vec![];
     let lines = inp.lines().collect::<Vec<_>>();
@@ -92,6 +95,29 @@ pub fn day03_part1(numbers: &[Number]) -> u32 {
         .sum()
 }
 
+#[aoc(day03, part2)]
+pub fn day03_part2(numbers: &[Number]) -> u32 {
+    let set = numbers
+        .iter()
+        .flat_map(|Number { neighbours, .. }| neighbours)
+        .cloned()
+        .collect::<HashSet<_>>();
+
+    set.into_iter()
+        .map(|symbol| {
+            let nums = numbers
+                .iter()
+                .filter(|Number { neighbours, .. }| neighbours.contains(&symbol))
+                .map(|Number { num, .. }| *num)
+                .collect::<Vec<_>>();
+
+            nums
+        })
+        .filter(|nums| nums.len() == 2)
+        .map(|nums| nums.into_iter().reduce(|memo, cur| memo * cur).unwrap_or(0))
+        .sum()
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -113,7 +139,7 @@ mod tests {
         let expected = vec![
             Number {
                 num: 467,
-                neighbours: vec!['*'],
+                neighbours: vec![('*', 3, 1)],
             },
             Number {
                 num: 114,
@@ -121,15 +147,15 @@ mod tests {
             },
             Number {
                 num: 35,
-                neighbours: vec!['*'],
+                neighbours: vec![('*', 3, 1)],
             },
             Number {
                 num: 633,
-                neighbours: vec!['#'],
+                neighbours: vec![('#', 6, 3)],
             },
             Number {
                 num: 617,
-                neighbours: vec!['*'],
+                neighbours: vec![('*', 3, 4)],
             },
             Number {
                 num: 58,
@@ -137,19 +163,19 @@ mod tests {
             },
             Number {
                 num: 592,
-                neighbours: vec!['+'],
+                neighbours: vec![('+', 5, 5)],
             },
             Number {
                 num: 755,
-                neighbours: vec!['*'],
+                neighbours: vec![('*', 5, 8)],
             },
             Number {
                 num: 664,
-                neighbours: vec!['$'],
+                neighbours: vec![('$', 3, 8)],
             },
             Number {
                 num: 598,
-                neighbours: vec!['*'],
+                neighbours: vec![('*', 5, 8)],
             },
         ];
         assert_eq!(expected, generator_day03_part1(INPUT));
@@ -160,5 +186,12 @@ mod tests {
         let gen = generator_day03_part1(INPUT);
 
         assert_eq!(day03_part1(&gen), 4361);
+    }
+
+    #[test]
+    fn test_day03_part2() {
+        let gen = generator_day03_part1(INPUT);
+
+        assert_eq!(day03_part2(&gen), 467835);
     }
 }
