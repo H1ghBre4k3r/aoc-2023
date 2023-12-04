@@ -38,8 +38,6 @@ fn generator_day03_part1(inp: &str) -> Vec<Number> {
     let mut numbers = vec![];
     let lines = inp.lines().collect::<Vec<_>>();
 
-    let mut result = String::new();
-
     let mut num: Option<u32> = None;
     let mut neighbours = vec![];
 
@@ -47,7 +45,7 @@ fn generator_day03_part1(inp: &str) -> Vec<Number> {
         for (col, c) in line.chars().enumerate() {
             if c.is_numeric() {
                 let digit = c.to_digit(10).unwrap();
-                if num.is_none() && col != 0 {
+                if num.is_none() && col > 0 {
                     let mut new_neighbours = get_neighbours(&lines, col - 1, row);
                     neighbours.append(&mut new_neighbours);
                 }
@@ -55,7 +53,6 @@ fn generator_day03_part1(inp: &str) -> Vec<Number> {
                 num = num.map(|num| num * 10 + digit).or(Some(digit));
                 let mut new_neighbours = get_neighbours(&lines, col, row);
                 neighbours.append(&mut new_neighbours);
-                result.push('X');
                 continue;
             } else if let Some(n) = num {
                 let mut new_neighbours = get_neighbours(&lines, col, row);
@@ -68,12 +65,20 @@ fn generator_day03_part1(inp: &str) -> Vec<Number> {
                 neighbours = vec![];
                 num = None;
             }
-            result.push(c);
         }
-        result.push('\n');
-    }
 
-    eprintln!("{result}");
+        if let Some(n) = num {
+            let mut new_neighbours = get_neighbours(&lines, line.len() - 1, row);
+            neighbours.append(&mut new_neighbours);
+
+            numbers.push(Number {
+                num: n,
+                neighbours: neighbours.clone(),
+            });
+            neighbours = vec![];
+            num = None;
+        }
+    }
 
     numbers
 }
