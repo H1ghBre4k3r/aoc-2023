@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{collections::HashMap, str::FromStr};
 
 use aoc_runner_derive::{aoc, aoc_generator};
 
@@ -46,8 +46,8 @@ impl FromStr for Card {
     }
 }
 
-#[aoc_generator(day04, part1)]
-fn generator_day04_part_1(inp: &str) -> Vec<Card> {
+#[aoc_generator(day04)]
+fn generator_day0(inp: &str) -> Vec<Card> {
     inp.lines()
         .map(|line| line.parse::<Card>().expect("invalid input"))
         .collect()
@@ -71,6 +71,29 @@ fn day04_part_1(cards: &[Card]) -> u32 {
             }
         })
         .sum()
+}
+
+#[aoc(day04, part2)]
+fn day04_part_2(cards: &[Card]) -> u32 {
+    let mut map = HashMap::new();
+
+    cards.iter().enumerate().for_each(|(index, card)| {
+        let amount = card
+            .own
+            .iter()
+            .filter(|val| card.wins.contains(val))
+            .count();
+
+        let current_val = map.get(&index).cloned().unwrap_or(1);
+        map.insert(index, current_val);
+
+        for i in 0..amount {
+            let key = index + i + 1;
+            let val = map.get(&key).cloned().unwrap_or(1);
+            map.insert(key, val + current_val);
+        }
+    });
+    map.values().sum()
 }
 
 #[cfg(test)]
@@ -102,7 +125,13 @@ Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11";
 
     #[test]
     fn test_day04_part_1() {
-        let gen = generator_day04_part_1(INPUT);
+        let gen = generator_day0(INPUT);
         assert_eq!(day04_part_1(&gen), 13);
+    }
+
+    #[test]
+    fn test_day04_part_2() {
+        let gen = generator_day0(INPUT);
+        assert_eq!(day04_part_2(&gen), 30);
     }
 }
